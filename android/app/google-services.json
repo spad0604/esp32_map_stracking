@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "490502126854",
+    "firebase_url": "https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "esp32-firebase-gps-4e0df",
+    "storage_bucket": "esp32-firebase-gps-4e0df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490502126854:android:ec4617f1b82470c1e37287",
+        "android_client_info": {
+          "package_name": "com.example.google_map_in_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAncwvOjUr_SQsnM1R8Yr_4CuzHIheubtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
