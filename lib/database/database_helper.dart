@@ -81,4 +81,18 @@ class DatabaseHelper {
       return null;
     }
   }
+
+  Future<int> countUniqueTimeInDayByDateTime(String dateTime) async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(DISTINCT timeInDay) as uniqueCount FROM dataModel WHERE dateTime = ?',
+      [dateTime],
+    );
+
+    if (result.isNotEmpty && result.first['uniqueCount'] != null) {
+      return result.first['uniqueCount'] as int;
+    } else {
+      return 0;
+    }
+  }
 }

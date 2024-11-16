@@ -74,16 +74,6 @@ class GoogleMapPolylineController extends SuperController {
     await database.insertDataModel(data);
 
     pointOnMap.add(LatLng(data.latitude, data.longtitude));
-
-    polyline.add(
-      Polyline(
-        polylineId: const PolylineId("Id"),
-        points: pointOnMap,
-        color: Colors.blue,
-        width: 5,
-      ),
-    );
-
     markers.add(
       Marker(
         markerId: MarkerId(pointOnMap.length.toString()),
@@ -96,9 +86,16 @@ class GoogleMapPolylineController extends SuperController {
       ),
     );
 
-    // Cập nhật UI bằng cách refresh hoặc sử dụng .value
-    polyline.refresh();
-    markers.refresh();
+    polyline.clear();
+    polyline.add(
+      Polyline(
+        polylineId: const PolylineId("Id"),
+        points: pointOnMap,
+        color: Colors.blue,
+        width: 5,
+      ),
+    );
+
   }
 
   void initializeMarkersAndPolyline() {

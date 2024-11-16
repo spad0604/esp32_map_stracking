@@ -23,4 +23,8 @@ class N {
   static void toImagePreview({RouteType type = RouteType.to}) {
     type.navigate(name: AppRoute.SERVICE);
   }
+
+  static void toShowHistory({RouteType type = RouteType.to}) {
+    type.navigate(name: AppRoute.DISTANCE_HISTORY);
+  }
 }

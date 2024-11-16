@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_map_in_flutter/database/database_helper.dart';
 import 'package:google_map_in_flutter/presentation/controller/google_map_polyline_controller/google_map_polyline_controller.dart';
 import 'package:google_map_in_flutter/presentation/controller/root_page_controller/root_page_controller.dart';
+import 'package:google_map_in_flutter/presentation/controller/service_controller/service_controller.dart';
 import 'package:google_map_in_flutter/presentation/views/root_page/root_page_screen.dart';
 
 void main() async{
@@ -20,6 +21,7 @@ void main() async{
   );
   Get.lazyPut(RootPageController.new);
   Get.lazyPut(() => GoogleMapPolylineController());
+  Get.lazyPut(() => ServiceController());
 
   final dbHelper = DatabaseHelper.instance;
   runApp(const MyApp());
