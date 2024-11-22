@@ -28,7 +28,7 @@ class ShowHistoryDistanceController extends SuperController {
       saveTimeInDay = serviceController.saveTimeInDay;
       debugPrint('hello ${saveDay.value}');
       if (list != null && list.isNotEmpty) {
-        initialCameraPosition.value = LatLng(list[0].latitude, list[0].longtitude);
+        initialCameraPosition.value = LatLng(list[0].latitude.toDouble(), list[0].longtitude.toDouble());
         data.value = list;
         await createMarkersAndPolylines(data.value!);
         calculateTotalDistance(data.value!);
@@ -46,7 +46,7 @@ class ShowHistoryDistanceController extends SuperController {
 
     List<LatLng> points = [];
     for (int i = 0; i < list.length; i++) {
-      LatLng position = LatLng(list[i].latitude, list[i].longtitude);
+      LatLng position = LatLng(list[i].latitude.toDouble(), list[i].longtitude.toDouble());
       points.add(position);
       markers.add(
         Marker(
@@ -80,10 +80,10 @@ class ShowHistoryDistanceController extends SuperController {
     double distance = 0.0;
     for (int i = 0; i < list.length - 1; i++) {
       distance += calculateDistance(
-        list[i].latitude,
-        list[i].longtitude,
-        list[i + 1].latitude,
-        list[i + 1].longtitude,
+        list[i].latitude.toDouble(),
+        list[i].longtitude.toDouble(),
+        list[i + 1].latitude.toDouble(),
+        list[i + 1].longtitude.toDouble(),
       );
     }
     totalDistance.value = distance;

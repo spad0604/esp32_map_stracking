@@ -17,7 +17,6 @@ class ShowHistoryDistanceScreen extends GetView<ShowHistoryDistanceController> {
             child: CircularProgressIndicator(),
           );
         }
-
         return SingleChildScrollView(
           child: Column(
             children: [

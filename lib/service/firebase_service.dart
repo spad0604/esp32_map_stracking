@@ -15,9 +15,9 @@ class FirebaseService {
         final entry = data.entries.first;
         final value = entry.value as Map<dynamic, dynamic>;
 
-        final double latitude = value['latitude'];
-        final double longitude = value['longtitude'];
-        final double speed = value['speed'];
+        final double latitude = value['latitude'].toDouble();
+        final double longitude = value['longtitude'].toDouble();
+        final double speed = value['speed'].toDouble();
 
         final DateTime dateTime = DateTime.now();
         final String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);

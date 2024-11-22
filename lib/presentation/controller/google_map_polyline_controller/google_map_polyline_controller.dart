@@ -28,12 +28,13 @@ class GoogleMapPolylineController extends SuperController {
   Rxn<LatLng> currentLocation = Rxn<LatLng>();
   RxSet<Polyline> polyline = RxSet<Polyline>();
   RxSet<Marker> markers = RxSet<Marker>();
+  Rx<bool> isFirstTime = true.obs;
 
   @override
   void onInit() async {
+    super.onInit();
     final DateTime dateTime = DateTime.now();
     final String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
-
 
     Timer.periodic(const Duration(minutes: 1), (timer) {
       elapsedMinutes.value += 1;
@@ -44,16 +45,16 @@ class GoogleMapPolylineController extends SuperController {
     firebaseService.getSingleItemStream(maxInDay != null ? maxInDay + 1 : 0).listen((data) async {
       if (data != null) {
         await updateLocationAndMap(data);
+        currentLocation.value = LatLng(data.latitude.toDouble(), data.longtitude.toDouble());
       }
+      await initializeMarkersAndPolyline();
     });
 
-    super.onInit();
-    initializeMarkersAndPolyline();
   }
 
   Future<void> updateLocationAndMap(DataModel data) async {
-    currentLocation.value = LatLng(data.latitude, data.longtitude);
-    speed.value = data.speed;
+    currentLocation.value = LatLng(data.latitude.toDouble(), data.longtitude.toDouble());
+    speed.value = data.speed.toDouble();
 
     if (isFirstTimeOpen.value) {
       model1.value = data;
@@ -63,10 +64,10 @@ class GoogleMapPolylineController extends SuperController {
       model1.value = data;
 
       double distanceBetweenPoints = calculateDistance(
-          model2.value!.latitude,
-          model2.value!.longtitude,
-          model1.value!.latitude,
-          model1.value!.longtitude
+          model2.value!.latitude.toDouble(),
+          model2.value!.longtitude.toDouble(),
+          model1.value!.latitude.toDouble(),
+          model1.value!.longtitude.toDouble()
       );
 
       distance.value = double.parse((distance.value! + distanceBetweenPoints).toStringAsFixed(2));
@@ -74,11 +75,11 @@ class GoogleMapPolylineController extends SuperController {
 
     await database.insertDataModel(data);
 
-    pointOnMap.add(LatLng(data.latitude, data.longtitude));
+    pointOnMap.add(LatLng(data.latitude.toDouble(), data.longtitude.toDouble()));
     markers.add(
       Marker(
         markerId: MarkerId(pointOnMap.length.toString()),
-        position: LatLng(data.latitude, data.longtitude),
+        position: LatLng(data.latitude.toDouble(), data.longtitude.toDouble()),
         infoWindow: InfoWindow(
           title: "New Location",
           snippet: "Speed: ${data.speed}",
@@ -101,7 +102,7 @@ class GoogleMapPolylineController extends SuperController {
 
   }
 
-  void initializeMarkersAndPolyline() {
+  Future<void> initializeMarkersAndPolyline() async {
     for (int i = 0; i < pointOnMap.length; i++) {
       markers.add(
         Marker(

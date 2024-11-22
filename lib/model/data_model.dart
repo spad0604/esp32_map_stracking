@@ -1,12 +1,17 @@
 class DataModel {
-  final double latitude;
-  final double longtitude;
-  final double speed;
+  final num latitude;
+  final num longtitude;
+  final num speed;
   final String dateTime;
   final int timeInDay;
 
-  DataModel({required this.latitude, required this.longtitude, required this.speed, required this.dateTime,
-      required this.timeInDay});
+  DataModel({
+    required this.latitude,
+    required this.longtitude,
+    required this.speed,
+    required this.dateTime,
+    required this.timeInDay,
+  });
 
   Map<String, dynamic> toMap() {
     return {
@@ -14,7 +19,7 @@ class DataModel {
       'longtitude': longtitude,
       'speed': speed,
       'dateTime': dateTime,
-      'timeInDay': timeInDay
+      'timeInDay': timeInDay,
     };
   }
 
