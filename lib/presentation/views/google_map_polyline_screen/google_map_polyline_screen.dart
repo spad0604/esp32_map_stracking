@@ -18,13 +18,13 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
             Obx(
               () => SizedBox(
                 height: Get.height - 400,
-                child: GoogleMap(
+                child: (controller.currentLocation.value != null) ? GoogleMap(
                   myLocationButtonEnabled: true,
                   markers: controller.markers,
                   polylines: controller.polyline,
                   initialCameraPosition: CameraPosition(
                       target: controller.currentLocation.value!, zoom: 14.0),
-                ),
+                ) : const SizedBox(),
               ),
             ),
             const SizedBox(height: 10,),

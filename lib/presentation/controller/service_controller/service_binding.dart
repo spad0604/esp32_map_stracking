@@ -5,8 +5,8 @@ import 'package:google_map_in_flutter/presentation/controller/show_history_dista
 class ServiceBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(ServiceController.new);
+    Get.put(ServiceController());
 
-    Get.lazyPut(ShowHistoryDistanceController.new);
+    Get.put(ShowHistoryDistanceController());
   }
 }

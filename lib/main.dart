@@ -1,11 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:google_map_in_flutter/database/database_helper.dart';
-import 'package:google_map_in_flutter/presentation/controller/google_map_polyline_controller/google_map_polyline_controller.dart';
+import 'package:google_map_in_flutter/env/app_route.dart';
+import 'package:google_map_in_flutter/presentation/controller/root_page_controller/root_page_binding.dart';
 import 'package:google_map_in_flutter/presentation/controller/root_page_controller/root_page_controller.dart';
-import 'package:google_map_in_flutter/presentation/controller/service_controller/service_controller.dart';
-import 'package:google_map_in_flutter/presentation/views/root_page/root_page_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +20,8 @@ void main() async{
       databaseURL: 'https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app',
     ),
   );
-  Get.lazyPut(RootPageController.new);
-  Get.lazyPut(() => GoogleMapPolylineController());
-  Get.lazyPut(() => ServiceController());
+  await requestLocationPermission();
+  Get.put(RootPageController());
 
   final dbHelper = DatabaseHelper.instance;
   runApp(const MyApp());
@@ -33,12 +33,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      builder: EasyLoading.init(),
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const RootPageScreen(),
+      initialBinding: RootPageBinding(),
+      initialRoute: AppRoute.ROOT,
+      getPages: AppRoute.generateGetPages,
     );
   }
 }
@@ -93,5 +97,11 @@ class AppBarWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> requestLocationPermission() async {
+  if (await Permission.location.request().isGranted) {
+  } else {
   }
 }

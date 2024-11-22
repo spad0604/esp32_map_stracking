@@ -19,16 +19,25 @@ class AppRoute {
   static String DISTANCE_HISTORY = '/distance_history';
 
   static List<GetPage> generateGetPages = [
-    GetPage(name: ROOT, page: RootPageScreen.new, binding: RootPageBinding()),
+    GetPage(
+        name: ROOT,
+        page: RootPageScreen.new,
+        binding: RootPageBinding()
+    ),
     GetPage(
         name: GOOGLE_MAP,
         page: GoogleMapPolylineScreen.new,
         binding: GoogleMapPolylineBindings()),
-    GetPage(name: SERVICE, page: ServiceScreen.new, binding: ServiceBinding()),
+    GetPage(
+        name: SERVICE,
+        page: ServiceScreen.new,
+        binding: ServiceBinding()
+    ),
     GetPage(
         name: DISTANCE_HISTORY,
         page: ShowHistoryDistanceScreen.new,
-        binding: ShowHistoryDistanceBinding())
+        binding: ShowHistoryDistanceBinding()
+    )
   ];
 
   static GetPage? getPage(String name) {

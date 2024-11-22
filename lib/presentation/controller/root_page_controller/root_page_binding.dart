@@ -7,10 +7,10 @@ import '../service_controller/service_controller.dart';
 class RootPageBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(RootPageController.new);
+    Get.put(RootPageController());
     
-    Get.lazyPut(() => GoogleMapPolylineController());
+    Get.put(GoogleMapPolylineController());
 
-    Get.lazyPut(ServiceController.new);
+    Get.put(ServiceController());
   }
 }

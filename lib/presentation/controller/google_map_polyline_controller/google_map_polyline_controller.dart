@@ -34,15 +34,16 @@ class GoogleMapPolylineController extends SuperController {
     final DateTime dateTime = DateTime.now();
     final String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
 
+
     Timer.periodic(const Duration(minutes: 1), (timer) {
       elapsedMinutes.value += 1;
     });
 
     int? maxInDay = await database.queryMaxTimeInDayByDateTime(formattedDate);
 
-    firebaseService.getSingleItemStream(maxInDay != null ? maxInDay + 1 : 0).listen((data) {
+    firebaseService.getSingleItemStream(maxInDay != null ? maxInDay + 1 : 0).listen((data) async {
       if (data != null) {
-        updateLocationAndMap(data);
+        await updateLocationAndMap(data);
       }
     });
 
@@ -50,7 +51,7 @@ class GoogleMapPolylineController extends SuperController {
     initializeMarkersAndPolyline();
   }
 
-  void updateLocationAndMap(DataModel data) async {
+  Future<void> updateLocationAndMap(DataModel data) async {
     currentLocation.value = LatLng(data.latitude, data.longtitude);
     speed.value = data.speed;
 
@@ -95,6 +96,8 @@ class GoogleMapPolylineController extends SuperController {
         width: 5,
       ),
     );
+
+    debugPrint('haloo ${polyline.length}');
 
   }
 

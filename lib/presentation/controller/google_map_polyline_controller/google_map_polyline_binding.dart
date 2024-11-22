@@ -4,6 +4,6 @@ import 'package:google_map_in_flutter/presentation/controller/google_map_polylin
 class GoogleMapPolylineBindings extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => GoogleMapPolylineController());
+    Get.put(GoogleMapPolylineController());
   }
 }

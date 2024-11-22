@@ -47,6 +47,8 @@ dependencies:
   build_runner: ^2.4.13
   table_calendar: ^3.1.2
   google_maps_flutter_platform_interface: ^2.9.5
+  flutter_easyloading: ^3.0.5
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
