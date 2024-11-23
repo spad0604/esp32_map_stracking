@@ -66,7 +66,7 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                                   ),
                                   children: const [
                                     TextSpan(
-                                      text: ' km/h',
+                                      text: ' m/s ',
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w400,

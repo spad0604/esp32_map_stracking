@@ -44,6 +44,7 @@ class GoogleMapPolylineController extends SuperController {
 
     firebaseService.getSingleItemStream(maxInDay != null ? maxInDay + 1 : 0).listen((data) async {
       if (data != null) {
+        debugPrint("update data");
         await updateLocationAndMap(data);
         currentLocation.value = LatLng(data.latitude.toDouble(), data.longtitude.toDouble());
       }
@@ -98,8 +99,7 @@ class GoogleMapPolylineController extends SuperController {
       ),
     );
 
-    debugPrint('haloo ${polyline.length}');
-
+    //debugPrint('haloo ${polyline.length}');
   }
 
   Future<void> initializeMarkersAndPolyline() async {

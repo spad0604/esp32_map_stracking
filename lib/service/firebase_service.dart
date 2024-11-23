@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -15,8 +14,8 @@ class FirebaseService {
         final entry = data.entries.first;
         final value = entry.value as Map<dynamic, dynamic>;
 
-        final double latitude = value['latitude'].toDouble();
-        final double longitude = value['longtitude'].toDouble();
+        final double latitude = value['LAT'].toDouble();
+        final double longitude = value['LON'].toDouble();
         final double speed = value['speed'].toDouble();
 
         final DateTime dateTime = DateTime.now();
