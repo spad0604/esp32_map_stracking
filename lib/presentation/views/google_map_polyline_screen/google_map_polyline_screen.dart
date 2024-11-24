@@ -18,16 +18,27 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
             Obx(
               () => SizedBox(
                 height: Get.height - 400,
-                child: (controller.currentLocation.value != null) ? GoogleMap(
-                  myLocationButtonEnabled: true,
-                  markers: controller.markers,
-                  polylines: controller.polyline,
-                  initialCameraPosition: CameraPosition(
-                      target: controller.currentLocation.value!, zoom: 14.0),
-                ) : const SizedBox(),
+                child: (controller.currentLocation.value != null)
+                    ? Obx(
+                  () => GoogleMap(
+                          myLocationButtonEnabled: true,
+                          markers: controller.markers,
+                          polylines: controller.polyline,
+                          initialCameraPosition: CameraPosition(
+                            target: controller.currentLocation.value!,
+                            zoom: 14.0,
+                          ),
+                          onMapCreated: (GoogleMapController gController) {
+                            controller.mapController.value = gController;
+                          },
+                        ),
+                    )
+                    : const SizedBox(),
               ),
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(
+              height: 10,
+            ),
             Container(
               margin: const EdgeInsets.all(15),
               padding: const EdgeInsets.all(15),
@@ -54,98 +65,92 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                           Image.asset(
                             'assets/images/speed.png',
                           ),
-                          const SizedBox(width: 10,),
+                          const SizedBox(
+                            width: 10,
+                          ),
                           Obx(
-                              () => RichText(
+                            () => RichText(
                                 text: TextSpan(
-                                  text: controller.speed.value.toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                    fontSize: 20
-                                  ),
-                                  children: const [
-                                    TextSpan(
+                                    text: controller.speed.value.toString(),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                        fontSize: 20),
+                                    children: const [
+                                  TextSpan(
                                       text: ' m/s ',
                                       style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black
-                                      )
-                                    )
-                                  ]
-                                )
-                            ),
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black))
+                                ])),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10,),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Row(
                         children: [
                           Image.asset(
                             'assets/images/distance.png',
                           ),
-                          const SizedBox(width: 10,),
+                          const SizedBox(
+                            width: 10,
+                          ),
                           Obx(
-                                () => RichText(
+                            () => RichText(
                                 text: TextSpan(
                                     text: controller.distance.value.toString(),
                                     style: const TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
-                                        fontSize: 20
-                                    ),
+                                        fontSize: 20),
                                     children: const [
-                                      TextSpan(
-                                          text: ' km',
-                                          style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.black
-                                          )
-                                      )
-                                    ]
-                                )
-                            ),
+                                  TextSpan(
+                                      text: ' km',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black))
+                                ])),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10,),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       Row(
                         children: [
                           Image.asset(
                             'assets/images/time.png',
                           ),
-                          const SizedBox(width: 10,),
+                          const SizedBox(
+                            width: 10,
+                          ),
                           Obx(
-                                () => RichText(
+                            () => RichText(
                                 text: TextSpan(
-                                    text: controller.elapsedMinutes.value.toString(),
+                                    text: controller.elapsedMinutes.value
+                                        .toString(),
                                     style: const TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
-                                        fontSize: 20
-                                    ),
+                                        fontSize: 20),
                                     children: const [
-                                      TextSpan(
-                                          text: ' minute',
-                                          style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w400,
-                                              color: Colors.black
-                                          )
-                                      )
-                                    ]
-                                )
-                            ),
+                                  TextSpan(
+                                      text: ' minute',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                          color: Colors.black))
+                                ])),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  Image.asset(
-                    'assets/images/bicycle.png'
-                  )
+                  Image.asset('assets/images/bicycle.png')
                 ],
               ),
             )

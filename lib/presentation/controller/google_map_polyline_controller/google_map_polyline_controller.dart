@@ -13,6 +13,8 @@ import '../../../model/data_model.dart';
 class GoogleMapPolylineController extends SuperController {
   final database = DatabaseHelper.instance;
   final FirebaseService firebaseService = FirebaseService();
+
+  Rxn<GoogleMapController> mapController = Rxn<GoogleMapController>();
   final List<LatLng> pointOnMap = [];
 
   final RxInt elapsedMinutes = 0.obs;
@@ -36,21 +38,19 @@ class GoogleMapPolylineController extends SuperController {
     final DateTime dateTime = DateTime.now();
     final String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
 
+    int? maxInDay = await database.queryMaxTimeInDayByDateTime(formattedDate);
+
     Timer.periodic(const Duration(minutes: 1), (timer) {
       elapsedMinutes.value += 1;
     });
-
-    int? maxInDay = await database.queryMaxTimeInDayByDateTime(formattedDate);
 
     firebaseService.getSingleItemStream(maxInDay != null ? maxInDay + 1 : 0).listen((data) async {
       if (data != null) {
         debugPrint("update data");
         await updateLocationAndMap(data);
-        currentLocation.value = LatLng(data.latitude.toDouble(), data.longtitude.toDouble());
       }
       await initializeMarkersAndPolyline();
     });
-
   }
 
   Future<void> updateLocationAndMap(DataModel data) async {
@@ -99,8 +99,13 @@ class GoogleMapPolylineController extends SuperController {
       ),
     );
 
-    //debugPrint('haloo ${polyline.length}');
+    if (mapController.value != null) {
+      mapController.value!.animateCamera(
+        CameraUpdate.newLatLng(LatLng(data.latitude.toDouble(), data.longtitude.toDouble())),
+      );
+    }
   }
+
 
   Future<void> initializeMarkersAndPolyline() async {
     for (int i = 0; i < pointOnMap.length; i++) {
