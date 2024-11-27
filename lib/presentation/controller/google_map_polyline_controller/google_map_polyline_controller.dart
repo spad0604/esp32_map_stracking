@@ -65,10 +65,10 @@ class GoogleMapPolylineController extends SuperController {
       model1.value = data;
 
       double distanceBetweenPoints = calculateDistance(
-          model2.value!.latitude.toDouble(),
-          model2.value!.longtitude.toDouble(),
-          model1.value!.latitude.toDouble(),
-          model1.value!.longtitude.toDouble()
+        model2.value!.latitude.toDouble(),
+        model2.value!.longtitude.toDouble(),
+        model1.value!.latitude.toDouble(),
+        model1.value!.longtitude.toDouble(),
       );
 
       distance.value = double.parse((distance.value! + distanceBetweenPoints).toStringAsFixed(2));
@@ -77,6 +77,18 @@ class GoogleMapPolylineController extends SuperController {
     await database.insertDataModel(data);
 
     pointOnMap.add(LatLng(data.latitude.toDouble(), data.longtitude.toDouble()));
+
+    // Cập nhật marker cũ thành màu xám
+    if (markers.isNotEmpty) {
+      final List<Marker> updatedMarkers = markers.map((marker) {
+        return marker.copyWith(
+          iconParam: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        );
+      }).toList();
+      markers.clear();
+      markers.addAll(updatedMarkers);
+    }
+
     markers.add(
       Marker(
         markerId: MarkerId(pointOnMap.length.toString()),
@@ -85,7 +97,7 @@ class GoogleMapPolylineController extends SuperController {
           title: "New Location",
           snippet: "Speed: ${data.speed}",
         ),
-        icon: BitmapDescriptor.defaultMarker,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
       ),
     );
 
@@ -105,6 +117,7 @@ class GoogleMapPolylineController extends SuperController {
       );
     }
   }
+
 
 
   Future<void> initializeMarkersAndPolyline() async {

@@ -63,20 +63,20 @@ void onStart(ServiceInstance service) async {
         projectId: 'esp32-firebase-gps-4e0df',
         storageBucket: 'esp32-firebase-gps-4e0df.firebasestorage.app',
         databaseURL:
-            'https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app',
+        'https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app',
       ),
     );
   }
 
   final databaseRef = FirebaseDatabase.instance.ref();
   final FlutterLocalNotificationsPlugin notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+  AndroidInitializationSettings('@mipmap/ic_launcher');
 
   const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+  InitializationSettings(android: initializationSettingsAndroid);
 
   notificationsPlugin.initialize(
     initializationSettings,
@@ -87,27 +87,18 @@ void onStart(ServiceInstance service) async {
     },
   );
 
-  databaseRef.child('/accident').onValue.listen((event) {
+  databaseRef.child('/data').onValue.listen((event) async {
     if (event.snapshot.value != null) {
-      final data = event.snapshot.value;
-      if (data == true) {
-        double latitude = 0.0;
-        double longitude = 0.0;
-        databaseRef.child('/data').onValue.listen((event) {
-          final dataLocation = event.snapshot.value as Map<dynamic, dynamic>?;
+      final data = event.snapshot.value as Map<dynamic, dynamic>;
 
-          if (dataLocation != null) {
-            latitude = double.tryParse(dataLocation['LAT'].toString()) ?? 0.0;
-            longitude = double.tryParse(dataLocation['LON'].toString()) ?? 0.0;
+      final int accidentStatus = int.parse(data['accident'].toString());
+      final int thiefStatus = int.parse(data['thief'].toString());
+      final double latitude =
+          double.tryParse(data['LAT'].toString()) ?? 0.0;
+      final double longitude =
+          double.tryParse(data['LON'].toString()) ?? 0.0;
 
-            debugPrint('Latitude: $latitude, Longitude: $longitude');
-          } else {
-            debugPrint('No data found');
-          }
-        });
-
-        service.invoke('update', {'value': data});
-
+      if (accidentStatus == 1) {
         notificationsPlugin.show(
           0,
           'Cảnh báo tai nạn',
@@ -115,69 +106,52 @@ void onStart(ServiceInstance service) async {
           payload: '{"latitude": $latitude, "longitude": $longitude}',
           NotificationDetails(
             android: AndroidNotificationDetails(
-              vibrationPattern: Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
+              vibrationPattern:
+              Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
               'accident_channel',
               'Accident Alerts',
               importance: Importance.max,
               priority: Priority.high,
-              playSound: true
+              playSound: true,
             ),
           ),
         );
 
-        databaseRef.child('/accident').set(false).then((_) {
-          debugPrint('Accident status set to false');
-        }).catchError((error) {
+        await databaseRef.child('/data/accident').set(0).catchError((error) {
           debugPrint('Error updating accident status: $error');
         });
       }
-    }
-  });
 
-  databaseRef.child('/thief').onValue.listen((event) {
-    if (event.snapshot.value != null) {
-      final data = event.snapshot.value;
-      if (data == true) {
-        double latitude = 0.0;
-        double longitude = 0.0;
-        databaseRef.child('/data').onValue.listen((event) {
-          final dataLocation = event.snapshot.value as Map<dynamic, dynamic>?;
-
-          if (dataLocation != null) {
-            latitude = double.tryParse(dataLocation['LAT'].toString()) ?? 0.0;
-            longitude = double.tryParse(dataLocation['LON'].toString()) ?? 0.0;
-
-            debugPrint('Latitude: $latitude, Longitude: $longitude');
-          } else {
-            debugPrint('No data found');
-          }
-        });
-
-        service.invoke('update', {'value': data});
-
+      if (thiefStatus == 1) {
         notificationsPlugin.show(
-          0,
+          1,
           'Cảnh báo trộm cắp',
           'Hệ thống đã phát hiện có trộm lấy xe!',
           payload: '{"latitude": $latitude, "longitude": $longitude}',
           NotificationDetails(
             android: AndroidNotificationDetails(
-              vibrationPattern: Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
-                'thief_channel',
-                'Theft Alerts',
-                importance: Importance.max,
-                priority: Priority.high,
-              playSound: true
-            )
+              vibrationPattern:
+              Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
+              'thief_channel',
+              'Theft Alerts',
+              importance: Importance.max,
+              priority: Priority.high,
+              playSound: true,
+            ),
           ),
         );
 
-        databaseRef.child('/thief').set(false).then((_) {
-          debugPrint('Thief status set to false');
-        }).catchError((error) {
+        await databaseRef.child('/data/thief').set(0).catchError((error) {
           debugPrint('Error updating thief status: $error');
         });
       }
+
+      service.invoke('update', {
+        'accident': accidentStatus,
+        'thief': thiefStatus,
+        'latitude': latitude,
+        'longitude': longitude,
+      });
     }
   });
 
@@ -185,6 +159,7 @@ void onStart(ServiceInstance service) async {
     service.stopSelf();
   });
 }
+
 
 Future<void> onSelectNotification(String? payload) async {
   if (payload != null) {
