@@ -78,7 +78,6 @@ class GoogleMapPolylineController extends SuperController {
 
     pointOnMap.add(LatLng(data.latitude.toDouble(), data.longtitude.toDouble()));
 
-    // Cập nhật marker cũ thành màu xám
     if (markers.isNotEmpty) {
       final List<Marker> updatedMarkers = markers.map((marker) {
         return marker.copyWith(
