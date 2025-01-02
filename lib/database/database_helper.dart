@@ -105,6 +105,7 @@ class DatabaseHelper {
     }
   }
 
+  //Tìm so hanh trinh trong ngay
   Future<int> countUniqueTimeInDayByDateTime(String dateTime) async {
     try {
       final db = await instance.database;

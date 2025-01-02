@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "490502126854",
-    "firebase_url": "https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "esp32-firebase-gps-4e0df",
-    "storage_bucket": "esp32-firebase-gps-4e0df.firebasestorage.app"
+    "project_number": "592480085035",
+    "firebase_url": "https://esp32-tracking-c5aad-default-rtdb.firebaseio.com",
+    "project_id": "esp32-tracking-c5aad",
+    "storage_bucket": "esp32-tracking-c5aad.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:490502126854:android:ec4617f1b82470c1e37287",
+        "mobilesdk_app_id": "1:592480085035:android:dea718dce351f5f5f0b66e",
         "android_client_info": {
           "package_name": "com.example.google_map_in_flutter"
         }
@@ -16,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAncwvOjUr_SQsnM1R8Yr_4CuzHIheubtg"
+          "current_key": "AIzaSyAeV_3moqByHDp8nGBNUr9tf8DdNAwDwng"
         }
       ],
       "services": {

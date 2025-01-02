@@ -11,8 +11,8 @@ class FirebaseService {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
 
       if (data != null) {
-        final double latitude = double.tryParse(data['LAT'].toString()) ?? 0.0;
-        final double longitude = double.tryParse(data['LON'].toString()) ?? 0.0;
+        final double latitude = double.tryParse(data['LAT'].toString()) ?? 21.00444;
+        final double longitude = double.tryParse(data['LON'].toString()) ?? 105.84678;
         final double speed = double.tryParse(data['speed'].toString()) ?? 0.0;
 
         final DateTime dateTime = DateTime.now();

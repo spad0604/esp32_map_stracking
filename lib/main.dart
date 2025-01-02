@@ -24,15 +24,15 @@ void main() async {
 
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-      apiKey: 'AIzaSyAncwvOjUr_SQsnM1R8Yr_4CuzHIheubtg',
-      appId: '1:490502126854:android:ec4617f1b82470c1e37287',
-      messagingSenderId: '490502126854',
-      projectId: 'esp32-firebase-gps-4e0df',
-      storageBucket: 'esp32-firebase-gps-4e0df.firebasestorage.app',
-      databaseURL:
-          'https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app',
+      apiKey: 'AIzaSyAeV_3moqByHDp8nGBNUr9tf8DdNAwDwng',
+      appId: '1:592480085035:android:dea718dce351f5f5f0b66e',
+      messagingSenderId: '592480085035',
+      projectId: 'esp32-tracking-c5aad', // Cập nhật lại projectId
+      storageBucket: 'esp32-tracking-c5aad.firebasestorage.app', // Cập nhật storageBucket
+      databaseURL: 'https://esp32-tracking-c5aad-default-rtdb.firebaseio.com', // Cập nhật databaseURL
     ),
   );
+
 
   await initializeService();
   Get.put(RootPageController());
@@ -57,13 +57,12 @@ void onStart(ServiceInstance service) async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyAncwvOjUr_SQsnM1R8Yr_4CuzHIheubtg',
-        appId: '1:490502126854:android:ec4617f1b82470c1e37287',
-        messagingSenderId: '490502126854',
-        projectId: 'esp32-firebase-gps-4e0df',
-        storageBucket: 'esp32-firebase-gps-4e0df.firebasestorage.app',
-        databaseURL:
-        'https://esp32-firebase-gps-4e0df-default-rtdb.asia-southeast1.firebasedatabase.app',
+        apiKey: 'AIzaSyAeV_3moqByHDp8nGBNUr9tf8DdNAwDwng',
+        appId: '1:592480085035:android:dea718dce351f5f5f0b66e',
+        messagingSenderId: '592480085035',
+        projectId: 'esp32-tracking-c5aad', // Cập nhật lại projectId
+        storageBucket: 'esp32-tracking-c5aad.firebasestorage.app', // Cập nhật storageBucket
+        databaseURL: 'https://esp32-tracking-c5aad-default-rtdb.firebaseio.com', // Cập nhật databaseURL
       ),
     );
   }
@@ -94,9 +93,9 @@ void onStart(ServiceInstance service) async {
       final int accidentStatus = int.parse(data['accident'].toString());
       final int thiefStatus = int.parse(data['thief'].toString());
       final double latitude =
-          double.tryParse(data['LAT'].toString()) ?? 0.0;
+          double.tryParse(data['LAT'].toString()) ??  105.84678;
       final double longitude =
-          double.tryParse(data['LON'].toString()) ?? 0.0;
+          double.tryParse(data['LON'].toString()) ?? 21.00444;
 
       if (accidentStatus == 1) {
         notificationsPlugin.show(

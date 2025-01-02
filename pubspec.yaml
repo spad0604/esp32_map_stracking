@@ -52,6 +52,7 @@ dependencies:
   flutter_background_service: ^5.0.10
   flutter_local_notifications: ^18.0.1
   vibration: ^2.0.1
+  firebase_messaging: ^15.1.6
   #awesome_notifications: ^0.10.0
 
 dev_dependencies:

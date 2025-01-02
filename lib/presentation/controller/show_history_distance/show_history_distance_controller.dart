@@ -26,7 +26,6 @@ class ShowHistoryDistanceController extends SuperController {
     ever(serviceController.list, (list) async {
       saveDay = serviceController.saveDay;
       saveTimeInDay = serviceController.saveTimeInDay;
-      //debugPrint('hello ${saveDay.value}');
       if (list != null && list.isNotEmpty) {
         initialCameraPosition.value = LatLng(list[0].latitude.toDouble(), list[0].longtitude.toDouble());
         data.value = list;
