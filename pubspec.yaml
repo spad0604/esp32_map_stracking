@@ -53,6 +53,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   vibration: ^2.0.1
   firebase_messaging: ^15.1.6
+  uuid: ^4.5.1
   #awesome_notifications: ^0.10.0
 
 dev_dependencies:

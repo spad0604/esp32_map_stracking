@@ -99,6 +99,28 @@ class ShowHistoryDistanceScreen extends GetView<ShowHistoryDistanceController> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 15),
+                      Obx(() => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Data Points: ${controller.data.value?.length ?? 0}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey,
+                                fontSize: 16),
+                          ),
+                          const SizedBox(height: 5),
+                          if (controller.data.value?.isNotEmpty ?? false)
+                            Text(
+                              'Trip Duration: ${_calculateTripDuration(controller.data.value!)}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey,
+                                  fontSize: 16),
+                            ),
+                        ],
+                      )),
                     ],
                   ),
                 ),
@@ -108,5 +130,46 @@ class ShowHistoryDistanceScreen extends GetView<ShowHistoryDistanceController> {
         );
       }),
     );
+  }
+
+  String _calculateTripDuration(List<dynamic> data) {
+    if (data.isEmpty) return '0s';
+    
+    try {
+      final firstPoint = data.first;
+      final lastPoint = data.last;
+      
+      // Nếu có timestamp, sử dụng nó
+      if (firstPoint.timestamp != null && lastPoint.timestamp != null) {
+        final duration = Duration(
+          milliseconds: lastPoint.timestamp - firstPoint.timestamp
+        );
+        
+        final hours = duration.inHours;
+        final minutes = duration.inMinutes.remainder(60);
+        final seconds = duration.inSeconds.remainder(60);
+        
+        if (hours > 0) {
+          return '${hours}h ${minutes}m ${seconds}s';
+        } else if (minutes > 0) {
+          return '${minutes}m ${seconds}s';
+        } else {
+          return '${seconds}s';
+        }
+      } else {
+        // Fallback: ước tính dựa trên số điểm dữ liệu (giả sử mỗi điểm cách nhau 1 giây)
+        final estimatedSeconds = data.length;
+        final minutes = estimatedSeconds ~/ 60;
+        final seconds = estimatedSeconds % 60;
+        
+        if (minutes > 0) {
+          return '~${minutes}m ${seconds}s (estimated)';
+        } else {
+          return '~${seconds}s (estimated)';
+        }
+      }
+    } catch (e) {
+      return 'Unknown duration';
+    }
   }
 }

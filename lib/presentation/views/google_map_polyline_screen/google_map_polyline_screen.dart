@@ -71,14 +71,14 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                           Obx(
                             () => RichText(
                                 text: TextSpan(
-                                    text: controller.speed.value.toString(),
+                                    text: controller.speed.value?.toStringAsFixed(1) ?? '0.0',
                                     style: const TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
                                         fontSize: 20),
                                     children: const [
                                   TextSpan(
-                                      text: ' m/s ',
+                                      text: ' km/h',
                                       style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w400,
@@ -131,23 +131,60 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                           Obx(
                             () => RichText(
                                 text: TextSpan(
-                                    text: controller.elapsedMinutes.value
-                                        .toString(),
+                                    text: controller.formattedTime.value,
                                     style: const TextStyle(
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black,
                                         fontSize: 20),
                                     children: const [
                                   TextSpan(
-                                      text: ' minute',
+                                      text: ' (h:m:s)',
                                       style: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w400,
-                                          color: Colors.black))
+                                          color: Colors.grey))
                                 ])),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Hiển thị thông tin đạp xe
+                      Obx(() => controller.caloriesEstimate.value != null
+                          ? Text(
+                              '🔥 ${controller.caloriesEstimate.value!.toStringAsFixed(0)} cal',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange,
+                                fontSize: 14,
+                              ),
+                            )
+                          : const SizedBox()),
+                      const SizedBox(height: 5),
+                      Obx(() => controller.performanceScore.value != null
+                          ? Text(
+                              '⭐ ${controller.performanceScore.value!.toStringAsFixed(1)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue,
+                                fontSize: 14,
+                              ),
+                            )
+                          : const SizedBox()),
+                      const SizedBox(height: 5),
+                      Obx(() => controller.cyclingPerformance.value != null
+                          ? Text(
+                              '${controller.cyclingPerformance.value!['intensity'] ?? ''}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            )
+                          : const SizedBox()),
                     ],
                   ),
                   Image.asset('assets/images/bicycle.png')

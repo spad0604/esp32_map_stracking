@@ -1,12 +1,14 @@
 import 'package:intl/intl.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:uuid/uuid.dart';
 
 import '../model/data_model.dart';
 
 class FirebaseService {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
+  static const Uuid _uuid = Uuid();
 
-  Stream<DataModel?> getSingleItemStream(int timeInDay) {
+  Stream<DataModel?> getSingleItemStream(int timeInDay, {String? tripId}) {
     return _databaseRef.child('/data').onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
 
@@ -20,10 +22,12 @@ class FirebaseService {
 
         return DataModel(
           latitude: latitude,
-          longtitude: longitude,
+          longitude: longitude,
           speed: speed,
           dateTime: formattedDate,
           timeInDay: timeInDay,
+          tripId: tripId ?? _uuid.v4(),
+          timestamp: DateTime.now().millisecondsSinceEpoch,
         );
       } else {
         return null;
@@ -31,4 +35,35 @@ class FirebaseService {
     });
   }
 
+  static String generateTripId() {
+    return _uuid.v4();
+  }
+
+  Future<List<Map<String, dynamic>>> getDataByTimeRange(
+    DateTime startTime,
+    DateTime endTime,
+  ) async {
+    try {
+      final snapshot = await _databaseRef
+          .child('/data')
+          .orderByChild('timestamp')
+          .startAt(startTime.millisecondsSinceEpoch)
+          .endAt(endTime.millisecondsSinceEpoch)
+          .get();
+
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        return data.entries.map((entry) {
+          return {
+            'key': entry.key,
+            'value': entry.value,
+          };
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error getting data by time range: $e');
+      return [];
+    }
+  }
 }

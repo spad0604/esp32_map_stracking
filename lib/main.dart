@@ -19,20 +19,21 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await requestNotificationPermission();
-
   await requestLocationPermission();
 
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: 'AIzaSyAeV_3moqByHDp8nGBNUr9tf8DdNAwDwng',
-      appId: '1:592480085035:android:dea718dce351f5f5f0b66e',
-      messagingSenderId: '592480085035',
-      projectId: 'esp32-tracking-c5aad', // Cập nhật lại projectId
-      storageBucket: 'esp32-tracking-c5aad.firebasestorage.app', // Cập nhật storageBucket
-      databaseURL: 'https://esp32-tracking-c5aad-default-rtdb.firebaseio.com', // Cập nhật databaseURL
-    ),
-  );
-
+  // Initialize Firebase for main app only if not already initialized
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyAVfZ1-6cLrpnre1COoW35af9u6JyVp3K4',
+        appId: '1:880090774897:android:7910e6308142355f864ad0',
+        messagingSenderId: '880090774897',
+        projectId: 'map-tracking-3309b',
+        storageBucket: 'map-tracking-3309b.firebasestorage.app',
+        databaseURL: 'https://map-tracking-3309b-default-rtdb.firebaseio.com',
+      ),
+    );
+  }
 
   await initializeService();
   Get.put(RootPageController());
@@ -54,30 +55,31 @@ Future<void> initializeService() async {
 }
 
 void onStart(ServiceInstance service) async {
+  // Initialize Firebase for background service only if not already initialized
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyAeV_3moqByHDp8nGBNUr9tf8DdNAwDwng',
-        appId: '1:592480085035:android:dea718dce351f5f5f0b66e',
-        messagingSenderId: '592480085035',
-        projectId: 'esp32-tracking-c5aad', // Cập nhật lại projectId
-        storageBucket: 'esp32-tracking-c5aad.firebasestorage.app', // Cập nhật storageBucket
-        databaseURL: 'https://esp32-tracking-c5aad-default-rtdb.firebaseio.com', // Cập nhật databaseURL
+        apiKey: 'AIzaSyAVfZ1-6cLrpnre1COoW35af9u6JyVp3K4',
+        appId: '1:880090774897:android:7910e6308142355f864ad0',
+        messagingSenderId: '880090774897',
+        projectId: 'map-tracking-3309b',
+        storageBucket: 'map-tracking-3309b.firebasestorage.app',
+        databaseURL: 'https://map-tracking-3309b-default-rtdb.firebaseio.com',
       ),
     );
   }
 
   final databaseRef = FirebaseDatabase.instance.ref();
   final FlutterLocalNotificationsPlugin notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@mipmap/ic_launcher');
 
   const InitializationSettings initializationSettings =
-  InitializationSettings(android: initializationSettingsAndroid);
+      InitializationSettings(android: initializationSettingsAndroid);
 
-  notificationsPlugin.initialize(
+  await notificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) async {
       if (response.payload != null) {
@@ -86,79 +88,83 @@ void onStart(ServiceInstance service) async {
     },
   );
 
-  databaseRef.child('/data').onValue.listen((event) async {
-    if (event.snapshot.value != null) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>;
+  // Add try-catch for error handling
+  try {
+    databaseRef.child('/data').onValue.listen((event) async {
+      if (event.snapshot.value != null) {
+        final data = event.snapshot.value as Map<dynamic, dynamic>;
 
-      final int accidentStatus = int.parse(data['accident'].toString());
-      final int thiefStatus = int.parse(data['thief'].toString());
-      final double latitude =
-          double.tryParse(data['LAT'].toString()) ??  105.84678;
-      final double longitude =
-          double.tryParse(data['LON'].toString()) ?? 21.00444;
+        final int accidentStatus = int.parse(data['accident'].toString());
+        final int thiefStatus = int.parse(data['thief'].toString());
+        final double latitude =
+            double.tryParse(data['LAT'].toString()) ?? 21.00444;
+        final double longitude =
+            double.tryParse(data['LON'].toString()) ?? 105.84678;
 
-      if (accidentStatus == 1) {
-        notificationsPlugin.show(
-          0,
-          'Cảnh báo tai nạn',
-          'Hệ thống đã phát hiện tai nạn!',
-          payload: '{"latitude": $latitude, "longitude": $longitude}',
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              vibrationPattern:
-              Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
-              'accident_channel',
-              'Accident Alerts',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
+        if (accidentStatus == 1) {
+          await notificationsPlugin.show(
+            0,
+            'Accident Alert',
+            'System has detected an accident!',
+            payload: '{"latitude": $latitude, "longitude": $longitude}',
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                vibrationPattern:
+                    Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
+                'accident_channel',
+                'Accident Alerts',
+                importance: Importance.max,
+                priority: Priority.high,
+                playSound: true,
+              ),
             ),
-          ),
-        );
+          );
 
-        await databaseRef.child('/data/accident').set(0).catchError((error) {
-          debugPrint('Error updating accident status: $error');
+          await databaseRef.child('/data/accident').set(0).catchError((error) {
+            debugPrint('Error updating accident status: $error');
+          });
+        }
+
+        if (thiefStatus == 1) {
+          await notificationsPlugin.show(
+            1,
+            'Theft Alert',
+            'System has detected a theft attempt!',
+            payload: '{"latitude": $latitude, "longitude": $longitude}',
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                vibrationPattern:
+                    Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
+                'thief_channel',
+                'Theft Alerts',
+                importance: Importance.max,
+                priority: Priority.high,
+                playSound: true,
+              ),
+            ),
+          );
+
+          await databaseRef.child('/data/thief').set(0).catchError((error) {
+            debugPrint('Error updating thief status: $error');
+          });
+        }
+
+        service.invoke('update', {
+          'accident': accidentStatus,
+          'thief': thiefStatus,
+          'latitude': latitude,
+          'longitude': longitude,
         });
       }
-
-      if (thiefStatus == 1) {
-        notificationsPlugin.show(
-          1,
-          'Cảnh báo trộm cắp',
-          'Hệ thống đã phát hiện có trộm lấy xe!',
-          payload: '{"latitude": $latitude, "longitude": $longitude}',
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              vibrationPattern:
-              Int64List.fromList([0, 5000, 1000, 2000, 1000, 2000]),
-              'thief_channel',
-              'Theft Alerts',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
-            ),
-          ),
-        );
-
-        await databaseRef.child('/data/thief').set(0).catchError((error) {
-          debugPrint('Error updating thief status: $error');
-        });
-      }
-
-      service.invoke('update', {
-        'accident': accidentStatus,
-        'thief': thiefStatus,
-        'latitude': latitude,
-        'longitude': longitude,
-      });
-    }
-  });
+    });
+  } catch (e) {
+    debugPrint('Error in Firebase listener: $e');
+  }
 
   service.on('stopService').listen((event) {
     service.stopSelf();
   });
 }
-
 
 Future<void> onSelectNotification(String? payload) async {
   if (payload != null) {
@@ -184,7 +190,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       builder: EasyLoading.init(),
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Vehicle Tracking',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

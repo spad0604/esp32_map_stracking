@@ -24,20 +24,42 @@ class ServiceController extends SuperController {
   }
 
   Future<void> updateListModel(String dateTime) async {
-    timeInday.value = await db.countUniqueTimeInDayByDateTime(dateTime);
-    debugPrint(timeInday.value.toString());
+    try {
+      timeInday.value = await db.countUniqueTimeInDayByDateTime(dateTime);
+      debugPrint('Found ${timeInday.value} trips for date: $dateTime');
+      
+      // Thêm debug info về database
+      final hasData = await db.hasData();
+      final stats = await db.getDatabaseStats();
+      debugPrint('Database has data: $hasData');
+      debugPrint('Database stats: $stats');
+      
+      if (timeInday.value == 0) {
+        debugPrint('No trips found for $dateTime. Checking all available dates...');
+        final trips = await db.getTripsByDate(dateTime);
+        debugPrint('Available trips for $dateTime: $trips');
+      }
+    } catch (e) {
+      debugPrint('Error in updateListModel: $e');
+    }
   }
 
   Future<void> getListWithDayAndOrder(String dateTime, int timeInDay) async {
     saveDay.value = dateTime;
     saveTimeInDay.value = timeInDay;
     try {
+      debugPrint('Getting trip data for date: $dateTime, timeInDay: $timeInDay');
       N.toShowHistory();
-      list.value =
-          await db.queryListByDateTimeAndTimeInDay(dateTime, timeInDay);
+      list.value = await db.queryListByDateTimeAndTimeInDay(dateTime, timeInDay);
+      debugPrint('Retrieved ${list.value?.length ?? 0} data points');
+      
+      if (list.value?.isEmpty ?? true) {
+        debugPrint('No data found. Checking database...');
+        final allTrips = await db.getTripsByDate(dateTime);
+        debugPrint('All trips for $dateTime: $allTrips');
+      }
     } catch (e) {
-      debugPrint(e.toString());
-    } finally {
+      debugPrint('Error in getListWithDayAndOrder: $e');
     }
   }
 
