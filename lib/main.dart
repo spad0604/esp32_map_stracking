@@ -15,25 +15,42 @@ import 'package:google_map_in_flutter/presentation/controller/root_page_controll
 import 'package:google_map_in_flutter/presentation/views/accident_screen/accident_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+const FirebaseOptions firebaseOptions = FirebaseOptions(
+  apiKey: 'AIzaSyAVfZ1-6cLrpnre1COoW35af9u6JyVp3K4',
+  appId: '1:880090774897:android:7910e6308142355f864ad0',
+  messagingSenderId: '880090774897',
+  projectId: 'map-tracking-3309b',
+  storageBucket: 'map-tracking-3309b.firebasestorage.app',
+  databaseURL: 'https://map-tracking-3309b-default-rtdb.firebaseio.com',
+);
+
+Future<void> initializeFirebaseIfNeeded() async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: firebaseOptions);
+      debugPrint('Firebase initialized successfully');
+    } else {
+      debugPrint('Firebase already initialized');
+    }
+  } catch (e) {
+    if (e.toString().contains('duplicate-app')) {
+      debugPrint('Firebase app already exists, using existing instance');
+      // Firebase is already initialized, continue
+    } else {
+      debugPrint('Error initializing Firebase: $e');
+      rethrow;
+    }
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await requestNotificationPermission();
   await requestLocationPermission();
 
-  // Initialize Firebase for main app only if not already initialized
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: 'AIzaSyAVfZ1-6cLrpnre1COoW35af9u6JyVp3K4',
-        appId: '1:880090774897:android:7910e6308142355f864ad0',
-        messagingSenderId: '880090774897',
-        projectId: 'map-tracking-3309b',
-        storageBucket: 'map-tracking-3309b.firebasestorage.app',
-        databaseURL: 'https://map-tracking-3309b-default-rtdb.firebaseio.com',
-      ),
-    );
-  }
+  // Initialize Firebase
+  await initializeFirebaseIfNeeded();
 
   await initializeService();
   Get.put(RootPageController());
@@ -55,20 +72,9 @@ Future<void> initializeService() async {
 }
 
 void onStart(ServiceInstance service) async {
-  // Initialize Firebase for background service only if not already initialized
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: 'AIzaSyAVfZ1-6cLrpnre1COoW35af9u6JyVp3K4',
-        appId: '1:880090774897:android:7910e6308142355f864ad0',
-        messagingSenderId: '880090774897',
-        projectId: 'map-tracking-3309b',
-        storageBucket: 'map-tracking-3309b.firebasestorage.app',
-        databaseURL: 'https://map-tracking-3309b-default-rtdb.firebaseio.com',
-      ),
-    );
-  }
-
+  // Initialize Firebase for background service
+  await initializeFirebaseIfNeeded();
+  
   final databaseRef = FirebaseDatabase.instance.ref();
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();

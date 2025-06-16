@@ -12,6 +12,8 @@ import 'package:intl/intl.dart';
 import '../../../model/data_model.dart';
 import '../../../model/trip_model.dart';
 
+enum TripState { idle, countdown, active, paused }
+
 class GoogleMapPolylineController extends SuperController {
   final database = DatabaseHelper.instance;
   final FirebaseService firebaseService = FirebaseService();
@@ -31,7 +33,12 @@ class GoogleMapPolylineController extends SuperController {
   Rxn<double> averageSpeed = Rxn<double>(0.0);
 
   Rx<bool> isFirstTimeOpen = true.obs;
-  Rx<bool> isTripActive = false.obs;
+  Rx<TripState> tripState = TripState.idle.obs;
+  
+  // Countdown
+  Rx<int> countdownValue = 0.obs;
+  Rx<bool> isCountdownActive = false.obs;
+  Timer? _countdownTimer;
 
   Rxn<DataModel> model1 = Rxn<DataModel>();
   Rxn<DataModel> model2 = Rxn<DataModel>();
@@ -45,17 +52,23 @@ class GoogleMapPolylineController extends SuperController {
   Rxn<String> currentTripId = Rxn<String>();
   Rxn<TripModel> currentTrip = Rxn<TripModel>();
   Rx<DateTime> tripStartTime = DateTime.now().obs;
+  StreamSubscription? _firebaseSubscription;
   
   // Analytics
   Rxn<Map<String, dynamic>> cyclingPerformance = Rxn<Map<String, dynamic>>();
   Rxn<double> caloriesEstimate = Rxn<double>();
   Rxn<double> performanceScore = Rxn<double>();
 
+  // Computed properties
+  bool get isTripActive => tripState.value == TripState.active;
+  bool get canStartTrip => tripState.value == TripState.idle;
+  bool get canStopTrip => tripState.value == TripState.active;
+
   @override
   void onInit() async {
     super.onInit();
     await checkAndRestorePreviousTrip();
-    await startNewTrip();
+    // Không tự động start trip nữa
   }
 
   Future<void> checkAndRestorePreviousTrip() async {
@@ -88,12 +101,41 @@ class GoogleMapPolylineController extends SuperController {
     }
   }
 
-  Future<void> startNewTrip() async {
+  Future<void> startTripWithCountdown() async {
+    if (!canStartTrip) return;
+    
+    tripState.value = TripState.countdown;
+    isCountdownActive.value = true;
+    countdownValue.value = 3;
+
+    // Hiệu ứng đếm ngược
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (countdownValue.value > 1) {
+        countdownValue.value--;
+      } else {
+        _countdownTimer?.cancel();
+        isCountdownActive.value = false;
+        _actuallyStartTrip();
+      }
+    });
+
+    // Hiệu ứng rung và âm thanh
+    Get.snackbar(
+      'Chuẩn bị khởi động',
+      'Hành trình sẽ bắt đầu sau 3 giây...',
+      duration: const Duration(seconds: 2),
+      backgroundColor: Colors.orange.withOpacity(0.8),
+      colorText: Colors.white,
+    );
+  }
+
+  Future<void> _actuallyStartTrip() async {
     try {
+      tripState.value = TripState.active;
+      
       // Tạo trip ID mới
       currentTripId.value = FirebaseService.generateTripId();
       tripStartTime.value = DateTime.now();
-      isTripActive.value = true;
       
       // Reset các giá trị
       distance.value = 0.0;
@@ -109,12 +151,14 @@ class GoogleMapPolylineController extends SuperController {
 
       // Bắt đầu timer cập nhật mỗi giây
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        elapsedSeconds.value += 1;
-        if (elapsedSeconds.value >= 60) {
-          elapsedMinutes.value += 1;
-          elapsedSeconds.value = 0;
+        if (tripState.value == TripState.active) {
+          elapsedSeconds.value += 1;
+          if (elapsedSeconds.value >= 60) {
+            elapsedMinutes.value += 1;
+            elapsedSeconds.value = 0;
+          }
+          _updateFormattedTime();
         }
-        _updateFormattedTime();
       });
 
       final DateTime dateTime = DateTime.now();
@@ -123,39 +167,59 @@ class GoogleMapPolylineController extends SuperController {
       int? maxInDay = await database.queryMaxTimeInDayByDateTime(formattedDate);
 
       // Lắng nghe data từ Firebase
-      firebaseService.getSingleItemStream(
+      _firebaseSubscription = firebaseService.getSingleItemStream(
         maxInDay != null ? maxInDay + 1 : 0,
         tripId: currentTripId.value
       ).listen((data) async {
-        if (data != null && isTripActive.value) {
+        if (data != null && tripState.value == TripState.active) {
           debugPrint("update data for trip: ${currentTripId.value}");
           await updateLocationAndMap(data);
           await updateAnalytics();
         }
         await initializeMarkersAndPolyline();
       });
+
+      Get.snackbar(
+        'Hành trình bắt đầu! 🚴‍♂️',
+        'Chúc bạn có một chuyến đi an toàn!',
+        duration: const Duration(seconds: 3),
+        backgroundColor: Colors.green.withOpacity(0.8),
+        colorText: Colors.white,
+      );
     } catch (e) {
       print('Error starting new trip: $e');
+      tripState.value = TripState.idle;
     }
   }
 
-  void _updateFormattedTime() {
-    final totalSeconds = elapsedMinutes.value * 60 + elapsedSeconds.value;
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final seconds = totalSeconds % 60;
-    
-    formattedTime.value = '${hours.toString().padLeft(2, '0')}:'
-                         '${minutes.toString().padLeft(2, '0')}:'
-                         '${seconds.toString().padLeft(2, '0')}';
-  }
+  Future<void> stopTrip() async {
+    if (!canStopTrip) return;
 
-  Future<void> endTrip() async {
+    // Hiển thị dialog xác nhận
+    final shouldStop = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Kết thúc hành trình?'),
+        content: const Text('Bạn có muốn kết thúc hành trình hiện tại không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Kết thúc', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    ) ?? false;
+
+    if (!shouldStop) return;
+
     try {
-      if (!isTripActive.value || currentTripId.value == null) return;
-
-      isTripActive.value = false;
+      tripState.value = TripState.idle;
       _timer?.cancel();
+      _firebaseSubscription?.cancel();
 
       // Tính toán thống kê cuối trip
       final totalDistance = await database.getTotalDistanceByTrip(currentTripId.value!);
@@ -184,7 +248,7 @@ class GoogleMapPolylineController extends SuperController {
       await updateAnalytics();
 
       Get.snackbar(
-        'Hành trình kết thúc',
+        'Hành trình kết thúc! 🏁',
         'Quãng đường: ${currentTrip.value!.formattedDistance}\n'
         'Thời gian: ${currentTrip.value!.formattedDuration}\n'
         'Calories đốt cháy: ${caloriesEstimate.value?.toStringAsFixed(0) ?? 'N/A'} cal\n'
@@ -197,6 +261,31 @@ class GoogleMapPolylineController extends SuperController {
     } catch (e) {
       print('Error ending trip: $e');
     }
+  }
+
+  void cancelCountdown() {
+    _countdownTimer?.cancel();
+    isCountdownActive.value = false;
+    tripState.value = TripState.idle;
+    
+    Get.snackbar(
+      'Đã hủy',
+      'Hành trình đã được hủy',
+      duration: const Duration(seconds: 2),
+      backgroundColor: Colors.grey.withOpacity(0.8),
+      colorText: Colors.white,
+    );
+  }
+
+  void _updateFormattedTime() {
+    final totalSeconds = elapsedMinutes.value * 60 + elapsedSeconds.value;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+    
+    formattedTime.value = '${hours.toString().padLeft(2, '0')}:'
+                         '${minutes.toString().padLeft(2, '0')}:'
+                         '${seconds.toString().padLeft(2, '0')}';
   }
 
   Future<void> updateAnalytics() async {
@@ -377,6 +466,14 @@ class GoogleMapPolylineController extends SuperController {
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
     return R * c;
+  }
+
+  @override
+  void onClose() {
+    _timer?.cancel();
+    _countdownTimer?.cancel();
+    _firebaseSubscription?.cancel();
+    super.onClose();
   }
 
   @override

@@ -1,0 +1,28 @@
+@startuml Journey Management System
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor User
+actor "Firebase" as FB
+actor "Local Database" as DB
+
+rectangle "Journey Management System" {
+  usecase "Start New Journey" as UC1
+  usecase "View Journey History" as UC2
+  usecase "Save Journey Data" as UC3
+  usecase "Query Past Journeys" as UC4
+  usecase "Display Journey Information" as UC5
+}
+
+User --> UC1
+User --> UC2
+UC1 --> FB
+FB --> UC3
+UC3 --> DB
+UC2 --> UC4
+UC4 --> DB
+UC1 --> UC5
+UC2 --> UC5
+
+@enduml
