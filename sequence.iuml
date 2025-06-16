@@ -1,28 +1,33 @@
-@startuml Journey Management System
-
-left to right direction
-skinparam packageStyle rectangle
+@startuml
+title Journey Management System
 
 actor User
-actor "Firebase" as FB
-actor "Local Database" as DB
+participant UI
+participant Firebase
+participant "Local Database"
 
-rectangle "Journey Management System" {
-  usecase "Start New Journey" as UC1
-  usecase "View Journey History" as UC2
-  usecase "Save Journey Data" as UC3
-  usecase "Query Past Journeys" as UC4
-  usecase "Display Journey Information" as UC5
-}
+User->UI: Interact with System
 
-User --> UC1
-User --> UC2
-UC1 --> FB
-FB --> UC3
-UC3 --> DB
-UC2 --> UC4
-UC4 --> DB
-UC1 --> UC5
-UC2 --> UC5
-
+alt Start New Journey
+    UI->Firebase: Request journey data
+    Firebase-->>UI: Return journey data
+    UI->"Local Database": Save current journey data
+    "Local Database"-->>UI: Confirm save
+    UI-->>User: Display journey information
+    
+    loop During Journey
+        Firebase->UI: Accident Alert
+        UI-->>User: Show Accident Warning
+        Note over UI,User: Display accident location and details
+        
+        Firebase->UI: Thief Alert
+        UI-->>User: Show Thief Warning
+        Note over UI,User: Display thief location and details
+    end
+    
+else View Past Journeys
+    UI->"Local Database": Query past journeys
+    "Local Database"-->>UI: Return journey history
+    UI-->>User: Display journey history
+end
 @enduml

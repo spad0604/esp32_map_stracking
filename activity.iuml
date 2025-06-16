@@ -1,0 +1,35 @@
+@startuml Journey Management System
+
+start
+
+:User opens app;
+
+if (Select Action?) then (Start New Journey)
+  :Request journey data from Firebase;
+  :Receive journey data;
+  :Save data to Local Database;
+  :Display journey information;
+  
+  while (During Journey?) is (Yes)
+    if (Receive Alert?) then (Accident Alert)
+      :Process accident alert;
+      :Show accident warning;
+      :Display accident location and details;
+    else (Thief Alert)
+      :Process thief alert;
+      :Show thief warning;
+      :Display thief location and details;
+    endif
+  endwhile (No)
+  
+else (View History)
+  :Query Local Database;
+  :Retrieve past journeys;
+  :Display journey history;
+endif
+
+:User interacts with displayed information;
+
+stop
+
+@enduml
