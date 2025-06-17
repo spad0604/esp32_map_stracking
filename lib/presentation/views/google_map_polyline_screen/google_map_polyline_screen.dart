@@ -16,7 +16,7 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
           SingleChildScrollView(
             child: Column(
               children: [
-                const AppBarWidget(pageName: 'Tracking Map'),
+                const AppBarWidget(pageName: 'Tracking Map', ),
                 Obx(
                   () => SizedBox(
                     height: Get.height - 480, // Giảm height để có chỗ cho nút
