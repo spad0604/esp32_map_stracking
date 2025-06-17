@@ -150,9 +150,11 @@ class TripAnalyticsService {
       final distance = await _database.getTotalDistanceByTrip(tripId);
       final analysis = await analyzeCyclingPerformance(tripId);
       
-      // Công thức ước tính calories cho xe đạp
-      // Cơ bản: ~40-50 calories/km tùy theo cường độ
-      double baseCalories = distance * 45; // 45 calories/km cơ bản
+      // Công thức mới tính calories cho xe đạp
+      // Cơ bản: ~300-400 calories/giờ tùy theo cường độ
+      // Giả sử tốc độ trung bình 15km/h, ta có:
+      // 300 calories/giờ = 20 calories/km
+      double baseCalories = distance * 20; // 20 calories/km cơ bản
       
       // Điều chỉnh dựa trên cường độ
       final intensity = analysis['intensity'] ?? 'Light Intensity';
@@ -160,16 +162,24 @@ class TripAnalyticsService {
       
       switch (intensity) {
         case 'High Intensity':
-          intensityMultiplier = 1.4;
+          intensityMultiplier = 2.0; // 40 calories/km
           break;
         case 'Moderate Intensity':
-          intensityMultiplier = 1.2;
+          intensityMultiplier = 1.5; // 30 calories/km
           break;
         case 'Light Intensity':
-          intensityMultiplier = 1.0;
+          intensityMultiplier = 1.0; // 20 calories/km
           break;
         default:
-          intensityMultiplier = 0.8;
+          intensityMultiplier = 0.8; // 16 calories/km
+      }
+      
+      // Thêm hệ số điều chỉnh dựa trên tốc độ trung bình
+      final avgSpeed = analysis['averageSpeed'] ?? 0.0;
+      if (avgSpeed > 0) {
+        // Tốc độ càng cao, đốt calories càng nhiều
+        final speedMultiplier = 1.0 + (avgSpeed / 30.0); // Tăng 1% cho mỗi km/h
+        return baseCalories * intensityMultiplier * speedMultiplier;
       }
       
       return baseCalories * intensityMultiplier;
@@ -304,5 +314,29 @@ class TripAnalyticsService {
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
     return R * c;
+  }
+
+  // Tính tổng calories đã đốt cháy cho tất cả các chuyến đi
+  Future<double> getTotalCaloriesBurned() async {
+    try {
+      final db = await _database.database;
+      final maps = await db.query(
+        'dataModel',
+        distinct: true,
+        columns: ['tripId'],
+      );
+
+      double totalCalories = 0.0;
+      for (final map in maps) {
+        final tripId = map['tripId'] as String;
+        final calories = await estimateCaloriesBurned(tripId);
+        totalCalories += calories;
+      }
+
+      return totalCalories;
+    } catch (e) {
+      print('Error calculating total calories burned: $e');
+      return 0.0;
+    }
   }
 } 

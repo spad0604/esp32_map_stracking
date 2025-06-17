@@ -317,4 +317,27 @@ class DatabaseHelper {
       return {};
     }
   }
+
+  Future<double> getTotalDistance() async {
+    try {
+      final db = await database;
+      final result = await db.rawQuery('''
+        SELECT SUM(distance) as total_distance 
+        FROM (
+          SELECT tripId, 
+                 SUM(distance) as distance 
+          FROM dataModel 
+          GROUP BY tripId
+        )
+      ''');
+      
+      if (result.isNotEmpty && result[0]['total_distance'] != null) {
+        return (result[0]['total_distance'] as num).toDouble();
+      }
+      return 0.0;
+    } catch (e) {
+      print('Error getting total distance: $e');
+      return 0.0;
+    }
+  }
 }

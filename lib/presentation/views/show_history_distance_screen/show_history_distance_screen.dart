@@ -71,56 +71,75 @@ class ShowHistoryDistanceScreen extends GetView<ShowHistoryDistanceController> {
                       const SizedBox(height: 10),
                       Center(
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Image.asset(
-                              'assets/images/distance.png',
+                            Row(
+                              children: [
+                                Image.asset(
+                                  'assets/images/distance.png',
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Obx(
+                                  () => RichText(
+                                      text: TextSpan(
+                                          text: controller.totalDistance.value
+                                              .toStringAsFixed(2),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black,
+                                              fontSize: 20),
+                                          children: const [
+                                        TextSpan(
+                                            text: ' km',
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.black))
+                                      ])),
+                                ),
+                              ],
                             ),
                             const SizedBox(
                               width: 10,
                             ),
-                            Obx(
-                              () => RichText(
-                                  text: TextSpan(
-                                      text: controller.totalDistance.value
-                                          .toStringAsFixed(2),
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black,
-                                          fontSize: 20),
-                                      children: const [
-                                    TextSpan(
-                                        text: ' km',
-                                        style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.black))
-                                  ])),
-                            ),
+                            Obx(() => controller.calories.value != null
+                                ? Text(
+                                    '🔥 ${controller.calories.value.toStringAsFixed(0)} cal',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.orange,
+                                      fontSize: 14,
+                                    ),
+                                  )
+                                : const SizedBox()),
+                            const SizedBox(height: 5),
                           ],
                         ),
                       ),
                       const SizedBox(height: 15),
                       Obx(() => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Data Points: ${controller.data.value?.length ?? 0}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey,
-                                fontSize: 16),
-                          ),
-                          const SizedBox(height: 5),
-                          if (controller.data.value?.isNotEmpty ?? false)
-                            Text(
-                              'Trip Duration: ${_calculateTripDuration(controller.data.value!)}',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey,
-                                  fontSize: 16),
-                            ),
-                        ],
-                      )),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Data Points: ${controller.data.value?.length ?? 0}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey,
+                                    fontSize: 16),
+                              ),
+                              const SizedBox(height: 5),
+                              if (controller.data.value?.isNotEmpty ?? false)
+                                Text(
+                                  'Trip Duration: ${_calculateTripDuration(controller.data.value!)}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                      fontSize: 16),
+                                ),
+                            ],
+                          )),
                     ],
                   ),
                 ),
@@ -134,21 +153,20 @@ class ShowHistoryDistanceScreen extends GetView<ShowHistoryDistanceController> {
 
   String _calculateTripDuration(List<dynamic> data) {
     if (data.isEmpty) return '0s';
-    
+
     try {
       final firstPoint = data.first;
       final lastPoint = data.last;
-      
+
       // Nếu có timestamp, sử dụng nó
       if (firstPoint.timestamp != null && lastPoint.timestamp != null) {
-        final duration = Duration(
-          milliseconds: lastPoint.timestamp - firstPoint.timestamp
-        );
-        
+        final duration =
+            Duration(milliseconds: lastPoint.timestamp - firstPoint.timestamp);
+
         final hours = duration.inHours;
         final minutes = duration.inMinutes.remainder(60);
         final seconds = duration.inSeconds.remainder(60);
-        
+
         if (hours > 0) {
           return '${hours}h ${minutes}m ${seconds}s';
         } else if (minutes > 0) {
@@ -161,7 +179,7 @@ class ShowHistoryDistanceScreen extends GetView<ShowHistoryDistanceController> {
         final estimatedSeconds = data.length;
         final minutes = estimatedSeconds ~/ 60;
         final seconds = estimatedSeconds % 60;
-        
+
         if (minutes > 0) {
           return '~${minutes}m ${seconds}s (estimated)';
         } else {

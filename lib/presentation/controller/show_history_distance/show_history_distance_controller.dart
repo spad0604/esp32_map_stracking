@@ -17,6 +17,8 @@ class ShowHistoryDistanceController extends SuperController {
 
   final RxDouble totalDistance = 0.0.obs;
 
+  final RxDouble calories = 0.0.obs;
+
   Rx<String> saveDay = ''.obs;
   Rx<int> saveTimeInDay = 0.obs;
 
@@ -31,6 +33,7 @@ class ShowHistoryDistanceController extends SuperController {
         data.value = list;
         await createMarkersAndPolylines(data.value!);
         calculateTotalDistance(data.value!);
+        calculateCalories(data.value!);
       } else {
         debugPrint("List is null or empty.");
       }
@@ -86,6 +89,7 @@ class ShowHistoryDistanceController extends SuperController {
       );
     }
     totalDistance.value = distance;
+    calories.value = totalDistance.value * 45;
     debugPrint('Total Distance: $distance km');
   }
 
@@ -106,6 +110,10 @@ class ShowHistoryDistanceController extends SuperController {
 
   double _degreesToRadians(double degrees) {
     return degrees * pi / 180;
+  }
+
+  void calculateCalories(List<DataModel> list) {
+    calories.value = totalDistance.value * 45;
   }
 
   @override

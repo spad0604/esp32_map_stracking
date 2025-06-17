@@ -58,6 +58,7 @@ class GoogleMapPolylineController extends SuperController {
   Rxn<Map<String, dynamic>> cyclingPerformance = Rxn<Map<String, dynamic>>();
   Rxn<double> caloriesEstimate = Rxn<double>();
   Rxn<double> performanceScore = Rxn<double>();
+  Rx<double> totalCaloriesBurned = 0.0.obs;
 
   // Computed properties
   bool get isTripActive => tripState.value == TripState.active;
@@ -68,6 +69,7 @@ class GoogleMapPolylineController extends SuperController {
   void onInit() async {
     super.onInit();
     await checkAndRestorePreviousTrip();
+    await updateTotalCalories();
     // Không tự động start trip nữa
   }
 
@@ -148,6 +150,13 @@ class GoogleMapPolylineController extends SuperController {
       markers.clear();
       polyline.clear();
       isFirstTimeOpen.value = true;
+      model1.value = null;
+      model2.value = null;
+      currentLocation.value = null;
+      speed.value = null;
+      cyclingPerformance.value = null;
+      caloriesEstimate.value = null;
+      performanceScore.value = null;
 
       // Bắt đầu timer cập nhật mỗi giây
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -246,12 +255,14 @@ class GoogleMapPolylineController extends SuperController {
 
       // Cập nhật analytics cuối cùng
       await updateAnalytics();
+      await updateTotalCalories();
 
       Get.snackbar(
         'Hành trình kết thúc! 🏁',
         'Quãng đường: ${currentTrip.value!.formattedDistance}\n'
         'Thời gian: ${currentTrip.value!.formattedDuration}\n'
         'Calories đốt cháy: ${caloriesEstimate.value?.toStringAsFixed(0) ?? 'N/A'} cal\n'
+        'Tổng calories: ${totalCaloriesBurned.value.toStringAsFixed(0)} cal\n'
         'Điểm hiệu suất: ${performanceScore.value?.toStringAsFixed(1) ?? 'N/A'}',
         duration: const Duration(seconds: 5),
         backgroundColor: Colors.green.withOpacity(0.8),
@@ -302,7 +313,7 @@ class GoogleMapPolylineController extends SuperController {
 
       // Ước tính calories đã đốt cháy
       final calories = await analyticsService.estimateCaloriesBurned(currentTripId.value!);
-      caloriesEstimate.value = calories;
+      caloriesEstimate.value = distance.value! * 45;
 
     } catch (e) {
       print('Error updating cycling analytics: $e');
@@ -321,10 +332,12 @@ class GoogleMapPolylineController extends SuperController {
     if (isFirstTimeOpen.value) {
       model1.value = data;
       isFirstTimeOpen.value = false;
+      debugPrint('First location point set: (${data.latitude}, ${data.longitude})');
     } else {
       model2.value = model1.value;
       model1.value = data;
 
+      // Tính toán khoảng cách giữa hai điểm
       double distanceBetweenPoints = calculateDistance(
         model2.value!.latitude.toDouble(),
         model2.value!.longitude.toDouble(),
@@ -332,7 +345,11 @@ class GoogleMapPolylineController extends SuperController {
         model1.value!.longitude.toDouble(),
       );
 
-      distance.value = double.parse((distance.value! + distanceBetweenPoints).toStringAsFixed(2));
+      // Chỉ cộng dồn nếu khoảng cách > 0
+      if (distanceBetweenPoints > 0) {
+        distance.value = double.parse((distance.value! + distanceBetweenPoints).toStringAsFixed(2));
+        debugPrint('Total distance: ${distance.value} km (Added: $distanceBetweenPoints km)');
+      }
     }
 
     // Đảm bảo data có đầy đủ thông tin trước khi lưu
@@ -362,24 +379,14 @@ class GoogleMapPolylineController extends SuperController {
       }
     }
 
-    // Cập nhật markers
-    if (markers.isNotEmpty) {
-      final List<Marker> updatedMarkers = markers.map((marker) {
-        return marker.copyWith(
-          iconParam: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        );
-      }).toList();
-      markers.clear();
-      markers.addAll(updatedMarkers);
-    }
-
+    // Cập nhật markers và polyline
     markers.add(
       Marker(
         markerId: MarkerId(pointOnMap.length.toString()),
         position: LatLng(data.latitude.toDouble(), data.longitude.toDouble()),
         infoWindow: InfoWindow(
           title: "Vị trí hiện tại",
-          snippet: "Tốc độ: ${data.speed.toStringAsFixed(1)} km/h\nTrip: ${currentTripId.value?.substring(0, 8) ?? 'N/A'}",
+          snippet: "Tốc độ: ${data.speed.toStringAsFixed(1)} km/h\nQuãng đường: ${distance.value?.toStringAsFixed(2) ?? '0.00'} km",
         ),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
       ),
@@ -454,18 +461,42 @@ class GoogleMapPolylineController extends SuperController {
   }
 
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double R = 6371;
-    double dLat = (lat2 - lat1) * pi / 180;
-    double dLon = (lon2 - lon1) * pi / 180;
+    // Kiểm tra nếu điểm trùng nhau
+    if (lat1 == lat2 && lon1 == lon2) {
+      return 0.0;
+    }
 
-    lat1 = lat1 * pi / 180;
-    lat2 = lat2 * pi / 180;
+    const double R = 6371.0; // Bán kính trái đất tính bằng km
+    const double d2r = pi / 180.0; // Hệ số chuyển đổi độ sang radian
 
-    double a = pow(sin(dLat / 2), 2) +
-        cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
+    // Chuyển đổi tọa độ sang radian
+    double lat1Rad = lat1 * d2r;
+    double lon1Rad = lon1 * d2r;
+    double lat2Rad = lat2 * d2r;
+    double lon2Rad = lon2 * d2r;
+
+    // Tính toán khoảng cách
+    double dlat = lat2Rad - lat1Rad;
+    double dlon = lon2Rad - lon1Rad;
+
+    // Công thức Haversine
+    double a = pow(sin(dlat / 2), 2) + cos(lat1Rad) * cos(lat2Rad) * pow(sin(dlon / 2), 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = R * c;
 
-    return R * c;
+    // Làm tròn đến 4 chữ số thập phân để có độ chính xác cao hơn
+    return double.parse(distance.toStringAsFixed(4));
+  }
+
+  Future<void> updateTotalCalories() async {
+    try {
+      // Lấy tổng quãng đường từ database
+      final totalDistance = await database.getTotalDistance();
+      // Tính calories dựa trên quãng đường (20 calories/km cơ bản)
+      totalCaloriesBurned.value = totalDistance * 20;
+    } catch (e) {
+      debugPrint('Error updating total calories: $e');
+    }
   }
 
   @override
