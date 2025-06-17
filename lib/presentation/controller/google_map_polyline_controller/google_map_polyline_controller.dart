@@ -34,7 +34,7 @@ class GoogleMapPolylineController extends SuperController {
 
   Rx<bool> isFirstTimeOpen = true.obs;
   Rx<TripState> tripState = TripState.idle.obs;
-  
+
   // Countdown
   Rx<int> countdownValue = 0.obs;
   Rx<bool> isCountdownActive = false.obs;
@@ -53,7 +53,7 @@ class GoogleMapPolylineController extends SuperController {
   Rxn<TripModel> currentTrip = Rxn<TripModel>();
   Rx<DateTime> tripStartTime = DateTime.now().obs;
   StreamSubscription? _firebaseSubscription;
-  
+
   // Analytics
   Rxn<Map<String, dynamic>> cyclingPerformance = Rxn<Map<String, dynamic>>();
   Rxn<double> caloriesEstimate = Rxn<double>();
@@ -79,13 +79,13 @@ class GoogleMapPolylineController extends SuperController {
       if (hasData) {
         final stats = await database.getDatabaseStats();
         debugPrint('Database contains data: $stats');
-        
+
         final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
         final todayTrips = await database.getTripsByDate(today);
-        
+
         if (todayTrips.isNotEmpty) {
           debugPrint('Found ${todayTrips.length} trips for today: $todayTrips');
-          
+
           // Hiển thị thông báo có dữ liệu cũ
           Get.snackbar(
             'Dữ liệu đã khôi phục',
@@ -105,7 +105,7 @@ class GoogleMapPolylineController extends SuperController {
 
   Future<void> startTripWithCountdown() async {
     if (!canStartTrip) return;
-    
+
     tripState.value = TripState.countdown;
     isCountdownActive.value = true;
     countdownValue.value = 3;
@@ -134,11 +134,11 @@ class GoogleMapPolylineController extends SuperController {
   Future<void> _actuallyStartTrip() async {
     try {
       tripState.value = TripState.active;
-      
+
       // Tạo trip ID mới
       currentTripId.value = FirebaseService.generateTripId();
       tripStartTime.value = DateTime.now();
-      
+
       // Reset các giá trị
       distance.value = 0.0;
       maxSpeed.value = 0.0;
@@ -177,8 +177,8 @@ class GoogleMapPolylineController extends SuperController {
 
       // Lắng nghe data từ Firebase
       _firebaseSubscription = firebaseService.getSingleItemStream(
-        maxInDay != null ? maxInDay + 1 : 0,
-        tripId: currentTripId.value
+          maxInDay != null ? maxInDay + 1 : 0,
+          tripId: currentTripId.value
       ).listen((data) async {
         if (data != null && tripState.value == TripState.active) {
           debugPrint("update data for trip: ${currentTripId.value}");
@@ -234,7 +234,7 @@ class GoogleMapPolylineController extends SuperController {
       final totalDistance = await database.getTotalDistanceByTrip(currentTripId.value!);
       final averageSpeedTrip = await database.getAverageSpeedByTrip(currentTripId.value!);
       final duration = await database.getTripDuration(currentTripId.value!);
-      
+
       final endTime = DateTime.now();
       final String formattedEndDate = DateFormat('dd/MM/yyyy').format(endTime);
 
@@ -278,7 +278,7 @@ class GoogleMapPolylineController extends SuperController {
     _countdownTimer?.cancel();
     isCountdownActive.value = false;
     tripState.value = TripState.idle;
-    
+
     Get.snackbar(
       'Đã hủy',
       'Hành trình đã được hủy',
@@ -293,10 +293,10 @@ class GoogleMapPolylineController extends SuperController {
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    
+
     formattedTime.value = '${hours.toString().padLeft(2, '0')}:'
-                         '${minutes.toString().padLeft(2, '0')}:'
-                         '${seconds.toString().padLeft(2, '0')}';
+        '${minutes.toString().padLeft(2, '0')}:'
+        '${seconds.toString().padLeft(2, '0')}';
   }
 
   Future<void> updateAnalytics() async {
@@ -306,7 +306,7 @@ class GoogleMapPolylineController extends SuperController {
       // Cập nhật phân tích hiệu suất đạp xe
       final performance = await analyticsService.analyzeCyclingPerformance(currentTripId.value!);
       cyclingPerformance.value = performance;
-      
+
       if (performance.isNotEmpty) {
         performanceScore.value = performance['performanceScore'];
       }
@@ -323,7 +323,7 @@ class GoogleMapPolylineController extends SuperController {
   Future<void> updateLocationAndMap(DataModel data) async {
     currentLocation.value = LatLng(data.latitude.toDouble(), data.longitude.toDouble());
     speed.value = data.speed.toDouble();
-    
+
     // Cập nhật tốc độ tối đa
     if (data.speed.toDouble() > (maxSpeed.value ?? 0.0)) {
       maxSpeed.value = data.speed.toDouble();
@@ -357,7 +357,7 @@ class GoogleMapPolylineController extends SuperController {
       tripId: currentTripId.value,
       timestamp: DateTime.now().millisecondsSinceEpoch,
     );
-    
+
     try {
       final insertResult = await database.insertDataModel(dataToSave);
       if (insertResult > 0) {
@@ -418,7 +418,7 @@ class GoogleMapPolylineController extends SuperController {
 
   Future<List<double>> _getAllSpeedsForTrip() async {
     if (currentTripId.value == null) return [];
-    
+
     try {
       final db = await database.database;
       final maps = await db.query(
@@ -427,7 +427,7 @@ class GoogleMapPolylineController extends SuperController {
         where: 'tripId = ? AND speed > 0',
         whereArgs: [currentTripId.value],
       );
-      
+
       return maps.map((map) => (map['speed'] as num).toDouble()).toList();
     } catch (e) {
       print('Error getting speeds: $e');
