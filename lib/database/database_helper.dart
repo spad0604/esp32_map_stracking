@@ -35,7 +35,7 @@ class DatabaseHelper {
     try {
       // Xóa bảng cũ nếu tồn tại
       await db.execute('DROP TABLE IF EXISTS dataModel');
-      
+
       // Tạo bảng mới với cấu trúc đúng
       await db.execute('''
       CREATE TABLE dataModel (
@@ -49,13 +49,13 @@ class DatabaseHelper {
         timestamp INTEGER
       )
       ''');
-      
+
       // Tạo index để tối ưu query
       await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_datetime_timeinday 
       ON dataModel(dateTime, timeInDay)
       ''');
-      
+
       await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_tripid 
       ON dataModel(tripId)
@@ -72,14 +72,14 @@ class DatabaseHelper {
         // Thêm cột mới thay vì xóa toàn bộ dữ liệu
         await db.execute('ALTER TABLE dataModel ADD COLUMN tripId TEXT');
         await db.execute('ALTER TABLE dataModel ADD COLUMN timestamp INTEGER');
-        
+
         // Tạo index mới
         await db.execute('''
         CREATE INDEX IF NOT EXISTS idx_tripid 
         ON dataModel(tripId)
         ''');
       }
-      
+
       // Không xóa dữ liệu cũ, chỉ cập nhật cấu trúc
       print('Database upgraded successfully from version $oldVersion to $newVersion');
     } catch (e) {
@@ -183,7 +183,7 @@ class DatabaseHelper {
       for (int i = 1; i < maps.length; i++) {
         final prev = DataModel.fromMap(maps[i - 1]);
         final curr = DataModel.fromMap(maps[i]);
-        
+
         totalDistance += _calculateDistance(
           prev.latitude.toDouble(),
           prev.longitude.toDouble(),
@@ -191,7 +191,7 @@ class DatabaseHelper {
           curr.longitude.toDouble(),
         );
       }
-      
+
       return totalDistance;
     } catch (e) {
       print('Error calculating total distance: $e');
@@ -207,7 +207,7 @@ class DatabaseHelper {
         'SELECT AVG(speed) as avgSpeed FROM dataModel WHERE tripId = ? AND speed > 0',
         [tripId],
       );
-      
+
       return result.isNotEmpty && result.first['avgSpeed'] != null
           ? (result.first['avgSpeed'] as double)
           : 0.0;
@@ -225,15 +225,15 @@ class DatabaseHelper {
         'SELECT MIN(timestamp) as startTime, MAX(timestamp) as endTime FROM dataModel WHERE tripId = ?',
         [tripId],
       );
-      
-      if (result.isNotEmpty && 
-          result.first['startTime'] != null && 
+
+      if (result.isNotEmpty &&
+          result.first['startTime'] != null &&
           result.first['endTime'] != null) {
         final startTime = result.first['startTime'] as int;
         final endTime = result.first['endTime'] as int;
         return Duration(milliseconds: endTime - startTime);
       }
-      
+
       return Duration.zero;
     } catch (e) {
       print('Error calculating trip duration: $e');
@@ -276,7 +276,7 @@ class DatabaseHelper {
         GROUP BY timeInDay, tripId
         ORDER BY timeInDay ASC
       ''', [dateTime]);
-      
+
       return result;
     } catch (e) {
       print('Error getting trips by date: $e');
@@ -310,11 +310,34 @@ class DatabaseHelper {
           MAX(dateTime) as lastDate
         FROM dataModel
       ''');
-      
+
       return result.first;
     } catch (e) {
       print('Error getting database stats: $e');
       return {};
+    }
+  }
+
+  Future<double> getTotalDistance() async {
+    try {
+      final db = await database;
+      final result = await db.rawQuery('''
+        SELECT SUM(distance) as total_distance 
+        FROM (
+          SELECT tripId, 
+                 SUM(distance) as distance 
+          FROM dataModel 
+          GROUP BY tripId
+        )
+      ''');
+
+      if (result.isNotEmpty && result[0]['total_distance'] != null) {
+        return (result[0]['total_distance'] as num).toDouble();
+      }
+      return 0.0;
+    } catch (e) {
+      print('Error getting total distance: $e');
+      return 0.0;
     }
   }
 }
