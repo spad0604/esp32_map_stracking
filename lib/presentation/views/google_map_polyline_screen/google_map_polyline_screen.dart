@@ -19,7 +19,7 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                 const AppBarWidget(pageName: 'Tracking Map', ),
                 Obx(
                   () => SizedBox(
-                    height: Get.height - 480, // Giảm height để có chỗ cho nút
+                    height: MediaQuery.of(context).size.height - 480, // Use MediaQuery instead of Get.height
                     child: (controller.currentLocation.value != null)
                         ? Obx(
                       () => GoogleMap(
@@ -74,6 +74,8 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                             children: [
                               Image.asset(
                                 'assets/images/speed.png',
+                                width: 24, // Add explicit width
+                                height: 24, // Add explicit height
                               ),
                               const SizedBox(width: 10),
                               Obx(
@@ -100,6 +102,8 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                             children: [
                               Image.asset(
                                 'assets/images/distance.png',
+                                width: 24, // Add explicit width
+                                height: 24, // Add explicit height
                               ),
                               const SizedBox(width: 10),
                               Obx(
@@ -126,6 +130,8 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                             children: [
                               Image.asset(
                                 'assets/images/time.png',
+                                width: 24, // Add explicit width
+                                height: 24, // Add explicit height
                               ),
                               const SizedBox(width: 10),
                               Obx(
@@ -156,6 +162,8 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                           Obx(() => controller.caloriesEstimate.value != null
                               ? Text(
                                   '🔥 ${controller.caloriesEstimate.value!.toStringAsFixed(0)} cal',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Colors.orange,
@@ -166,6 +174,8 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                           const SizedBox(height: 5),
                           Obx(() => controller.performanceScore.value != null
                               ? Text(
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                   '⭐ ${controller.performanceScore.value!.toStringAsFixed(1)}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
@@ -178,6 +188,8 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                           Obx(() => controller.cyclingPerformance.value != null
                               ? Text(
                                   '${controller.cyclingPerformance.value!['intensity'] ?? ''}',
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                     color: Colors.grey,
@@ -187,7 +199,11 @@ class GoogleMapPolylineScreen extends GetView<GoogleMapPolylineController> {
                               : const SizedBox()),
                         ],
                       ),
-                      Image.asset('assets/images/bicycle.png')
+                      Image.asset(
+                        'assets/images/bicycle.png',
+                        width: 48, // Add explicit width
+                        height: 48, // Add explicit height
+                      )
                     ],
                   ),
                 ),
